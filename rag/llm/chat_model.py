@@ -104,7 +104,13 @@ class XinferenceChat(Base):
         if base_url.split("/")[-1] != "v1":
             base_url = os.path.join(base_url, "v1")
         super().__init__(key, model_name, base_url)
-
+class HuggingFaceChat(Base):
+    def __init__(self, key=None, model_name="", base_url=""):
+        if not base_url:
+            raise ValueError("Local llm url cannot be None")
+        if base_url.split("/")[-1] != "v1":
+            base_url = os.path.join(base_url, "v1")
+        super().__init__(key, model_name, base_url)
 
 class DeepSeekChat(Base):
     def __init__(self, key, model_name="deepseek-chat", base_url="https://api.deepseek.com/v1"):
@@ -114,7 +120,9 @@ class DeepSeekChat(Base):
 
 class AzureChat(Base):
     def __init__(self, key, model_name, **kwargs):
-        self.client = AzureOpenAI(api_key=key, azure_endpoint=kwargs["base_url"], api_version="2024-02-01")
+        api_key = json.loads(key).get('api_key', '')
+        api_version = json.loads(key).get('api_version', '2024-02-01')
+        self.client = AzureOpenAI(api_key=api_key, azure_endpoint=kwargs["base_url"], api_version=api_version)
         self.model_name = model_name
 
 
@@ -661,7 +669,7 @@ class BedrockChat(Base):
                     modelId=self.model_name,
                     messages=history,
                     inferenceConfig=gen_conf,
-                    system=[{"text": system}] if system else None,
+                    system=[{"text": (system if system else "Answer the user's message.")}]
                 )
                 ans = response["output"]["message"]["content"][0]["text"]
                 return ans, num_tokens_from_string(ans)
@@ -676,7 +684,7 @@ class BedrockChat(Base):
                 modelId=self.model_name,
                 messages=history,
                 inferenceConfig=gen_conf,
-                system=[{"text": system if system else ""}],
+                system=[{"text": (system if system else "Answer the user's message.")}]
             )
 
             # Extract and print the streamed response text in real-time.
