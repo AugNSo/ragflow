@@ -1051,4 +1051,11 @@ def migrate_db():
             )
         except Exception as e:
             pass
+        try:
+            migrate(
+                migrator.alter_column_type('api_token', 'dialog_id',
+                                           CharField(max_length=32, null=True, index=True))
+            )
+        except Exception as e:
+            pass
 
