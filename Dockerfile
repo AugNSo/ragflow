@@ -48,8 +48,8 @@ RUN --mount=type=cache,id=ragflow_builder_apt,target=/var/cache/apt,sharing=lock
     rm -rf /var/lib/apt/lists/*
 
 COPY web web
-# RUN --mount=type=cache,id=ragflow_builder_npm,target=/root/.npm,sharing=locked \
-#     cd web && npm i --force && npm run build
+RUN --mount=type=cache,id=ragflow_builder_npm,target=/root/.npm,sharing=locked \
+    cd web && npm i --force && npm run build
 
 # install dependencies from poetry.lock file
 COPY pyproject.toml poetry.toml poetry.lock ./
