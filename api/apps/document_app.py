@@ -69,7 +69,7 @@ def upload():
         return get_json_result(
             data=False, retmsg="\n".join(err), retcode=RetCode.SERVER_ERROR)
     
-    doc_ids = [file.get("doc_id") for file in files]
+    doc_ids = [file[0].get("id") for file in files]
     return get_json_result(data={"success": True, "doc_ids": doc_ids})
 
 
