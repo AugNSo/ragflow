@@ -12,9 +12,9 @@ const ChatApiKeyModal = ({
   dialogId,
   hideModal,
   idKey,
-}: IModalProps<any> & { dialogId?: string; idKey: string }) => {
+}: IModalProps<any> & { dialogId: string; idKey: string }) => {
   const { createToken, removeToken, tokenList, listLoading, creatingLoading } =
-    useOperateApiKey(idKey, dialogId);
+    useOperateApiKey(dialogId, idKey);
   const { t } = useTranslate('chat');
 
   const columns: TableProps<IToken>['columns'] = [
@@ -36,7 +36,9 @@ const ChatApiKeyModal = ({
       render: (_, record) => (
         <Space size="middle">
           <CopyToClipboard text={record.token}></CopyToClipboard>
-          <DeleteOutlined onClick={() => removeToken(record.token)} />
+          <DeleteOutlined
+            onClick={() => removeToken(record.token, record.tenant_id)}
+          />
         </Space>
       ),
     },
@@ -58,13 +60,8 @@ const ChatApiKeyModal = ({
           dataSource={tokenList}
           rowKey={'token'}
           loading={listLoading}
-          pagination={false}
         />
-        <Button
-          onClick={createToken}
-          loading={creatingLoading}
-          disabled={tokenList.length > 0}
-        >
+        <Button onClick={createToken} loading={creatingLoading}>
           {t('createNewKey')}
         </Button>
       </Modal>

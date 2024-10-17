@@ -19,9 +19,6 @@ const {
   deleteFactory,
   getSystemStatus,
   getSystemVersion,
-  getSystemTokenList,
-  removeSystemToken,
-  createSystemToken,
 } = api;
 
 const methods = {
@@ -88,18 +85,6 @@ const methods = {
   deleteFactory: {
     url: deleteFactory,
     method: 'post',
-  },
-  listToken: {
-    url: getSystemTokenList,
-    method: 'get',
-  },
-  createToken: {
-    url: createSystemToken,
-    method: 'post',
-  },
-  removeToken: {
-    url: removeSystemToken,
-    method: 'delete',
   },
 } as const;
 

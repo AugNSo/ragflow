@@ -25,9 +25,6 @@ export default defineConfig({
       hack: `true; @import "~@/less/index.less";`,
     },
   },
-  mdx: {
-    loader: 'remark-loader',
-  },
   devtool: 'source-map',
   copy: ['src/conf.json'],
   proxy: {
@@ -38,17 +35,5 @@ export default defineConfig({
       logger: console,
       // pathRewrite: { '^/v1': '/v1' },
     },
-  },
-  chainWebpack(memo, args) {
-    memo.module
-      .rule('markdown')
-      .test(/\.md$/)
-      .use('html-loader')
-      .loader('html-loader')
-      .end()
-      .use('remark-loader')
-      .loader('remark-loader');
-
-    return memo;
   },
 });

@@ -1,31 +1,31 @@
 import { SharedFrom } from '@/constants/chat';
 import {
+  useCreateNextToken,
+  useFetchTokenList,
+  useRemoveNextToken,
+} from '@/hooks/chat-hooks';
+import {
   useSetModalState,
   useShowDeleteConfirm,
   useTranslate,
 } from '@/hooks/common-hooks';
-import {
-  useCreateSystemToken,
-  useFetchSystemTokenList,
-  useRemoveSystemToken,
-} from '@/hooks/user-setting-hooks';
 import { IStats } from '@/interfaces/database/chat';
 import { useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { useCallback } from 'react';
 
-export const useOperateApiKey = (idKey: string, dialogId?: string) => {
-  const { removeToken } = useRemoveSystemToken();
-  const { createToken, loading: creatingLoading } = useCreateSystemToken();
-  const { data: tokenList, loading: listLoading } = useFetchSystemTokenList({
+export const useOperateApiKey = (dialogId: string, idKey: string) => {
+  const { removeToken } = useRemoveNextToken();
+  const { createToken, loading: creatingLoading } = useCreateNextToken();
+  const { data: tokenList, loading: listLoading } = useFetchTokenList({
     [idKey]: dialogId,
   });
 
   const showDeleteConfirm = useShowDeleteConfirm();
 
-  const onRemoveToken = (token: string) => {
+  const onRemoveToken = (token: string, tenantId: string) => {
     showDeleteConfirm({
-      onOk: () => removeToken(token),
+      onOk: () => removeToken({ dialogId, tokens: [token], tenantId }),
     });
   };
 
@@ -49,7 +49,7 @@ type ChartStatsType = {
 export const useSelectChartStatsList = (): ChartStatsType => {
   const queryClient = useQueryClient();
   const data = queryClient.getQueriesData({ queryKey: ['fetchStats'] });
-  const stats: IStats = (data.length > 0 ? data[0][1] : {}) as IStats;
+  const stats: IStats = data[0][1] as IStats;
 
   return Object.keys(stats).reduce((pre, cur) => {
     const item = stats[cur as keyof IStats];
@@ -77,12 +77,10 @@ const getUrlWithToken = (token: string, from: string = 'chat') => {
   return `${protocol}//${host}/chat/share?shared_id=${token}&from=${from}`;
 };
 
-const useFetchTokenListBeforeOtherStep = (idKey: string, dialogId?: string) => {
+const useFetchTokenListBeforeOtherStep = (dialogId: string, idKey: string) => {
   const { showTokenEmptyError } = useShowTokenEmptyError();
 
-  const { data: tokenList, refetch } = useFetchSystemTokenList({
-    [idKey]: dialogId,
-  });
+  const { data: tokenList, refetch } = useFetchTokenList({ [idKey]: dialogId });
 
   const token =
     Array.isArray(tokenList) && tokenList.length > 0 ? tokenList[0].token : '';
@@ -104,7 +102,7 @@ const useFetchTokenListBeforeOtherStep = (idKey: string, dialogId?: string) => {
   };
 };
 
-export const useShowEmbedModal = (idKey: string, dialogId?: string) => {
+export const useShowEmbedModal = (dialogId: string, idKey: string) => {
   const {
     visible: embedVisible,
     hideModal: hideEmbedModal,
@@ -112,8 +110,8 @@ export const useShowEmbedModal = (idKey: string, dialogId?: string) => {
   } = useSetModalState();
 
   const { handleOperate, token } = useFetchTokenListBeforeOtherStep(
-    idKey,
     dialogId,
+    idKey,
   );
 
   const handleShowEmbedModal = useCallback(async () => {
@@ -131,8 +129,8 @@ export const useShowEmbedModal = (idKey: string, dialogId?: string) => {
   };
 };
 
-export const usePreviewChat = (idKey: string, dialogId?: string) => {
-  const { handleOperate } = useFetchTokenListBeforeOtherStep(idKey, dialogId);
+export const usePreviewChat = (dialogId: string, idKey: string) => {
+  const { handleOperate } = useFetchTokenListBeforeOtherStep(dialogId, idKey);
 
   const open = useCallback(
     (t: string) => {
