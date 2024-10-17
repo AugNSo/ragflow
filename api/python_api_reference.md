@@ -3,7 +3,7 @@
 **THE API REFERENCES BELOW ARE STILL UNDER DEVELOPMENT.**
 
 :::tip NOTE
-Knowledgebase APIs
+Knowledge Base Management
 :::
 
 ## Create knowledge base
@@ -137,7 +137,7 @@ RAGFlow.list_datasets(
     desc: bool = True,
     id: str = None,
     name: str = None
-) -> List[DataSet]
+) -> list[DataSet]
 ```
 
 Retrieves a list of knowledge bases.
@@ -232,38 +232,46 @@ Updates the current knowledge base.
 from ragflow import RAGFlow
 
 rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
-ds = rag.list_datasets(name="kb_1")
-ds.update({"embedding_model":"BAAI/bge-zh-v1.5", "parse_method":"manual"})
+dataset = rag.list_datasets(name="kb_1")
+dataset.update({"embedding_model":"BAAI/bge-zh-v1.5", "parse_method":"manual"})
 ```
+
 ---
 
 :::tip API GROUPING
-File management inside knowledge base
+File Management within Knowledge Base
 :::
 
-## Upload document
+## Upload documents
 
 ```python
-DataSet.upload_documents(document_list: List[dict])
+DataSet.upload_documents(document_list: list[dict])
 ```
+
+Updloads documents to the current knowledge base.
 
 ### Parameters
 
-#### document_list:`List[dict]`
-A list composed of dicts containing `name` and `blob`.
+#### document_list
 
+A list of dictionaries representing the documents to upload, each containing the following keys:
+
+- `"name"`: (Optional) File path to the document to upload.  
+  Ensure that each file path has a suffix.
+- `"blob"`: (Optional) The document to upload in binary format.
 
 ### Returns
-no return
+
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
-```python
-from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-ds = rag.create_dataset(name="kb_1")
-ds.upload_documents([{name="1.txt", blob="123"}, ...] }
+```python
+dataset = rag.create_dataset(name="kb_name")
+dataset.upload_documents([{name="1.txt", blob="123"}, ...])
 ```
+
 ---
 
 ## Update document
@@ -272,26 +280,30 @@ ds.upload_documents([{name="1.txt", blob="123"}, ...] }
 Document.update(update_message:dict)
 ```
 
+Updates configurations for the current document.
+
 ### Parameters
 
-#### update_message:`dict`  
-only `name`,`parser_config`,`parser_method` can be changed
+#### update_message: `dict`
+
+only `name`, `parser_config`, and `parser_method` can be changed
 
 ### Returns
 
-no return
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-ds=rag.list_datasets(id='id')
-ds=ds[0]
-doc = ds.list_documents(id="wdfxb5t547d")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
+dataset=rag.list_datasets(id='id')
+dataset=dataset[0]
+doc = dataset.list_documents(id="wdfxb5t547d")
 doc = doc[0]
-doc.update([{"parser_method": "manual"...}])
+doc.update([{"parser_method": "manual"}])
 ```
 
 ---
@@ -311,7 +323,7 @@ bytes of the document.
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 ds=rag.list_datasets(id="id")
 ds=ds[0]
 doc = ds.list_documents(id="wdfxb5t547d")
@@ -325,51 +337,54 @@ print(doc)
 ## List documents
 
 ```python
-Dataset.list_documents(id:str =None, keywords: str=None, offset: int=0, limit:int = 1024,order_by:str = "create_time", desc: bool = True) -> List[Document]
+Dataset.list_documents(id:str =None, keywords: str=None, offset: int=0, limit:int = 1024,order_by:str = "create_time", desc: bool = True) -> list[Document]
 ```
 
 ### Parameters
 
-#### id: `str`
+#### id
 
 The id of the document to be got
 
-#### keywords: `str`
+#### keywords
 
 List documents whose name has the given keywords. Defaults to `None`.
 
-#### offset: `int`
+#### offset
 
 The beginning number of records for paging. Defaults to `0`.
 
-#### limit: `int`
+#### limit
 
-Records number to return, -1 means all of them. Records number to return, -1 means all of them.
+Records number to return, `-1` means all of them. Records number to return, `-1` means all of them.
 
-#### orderby: `str`
+#### orderby
+
 The field by which the records should be sorted. This specifies the attribute or column used to order the results.
 
-#### desc:`bool`
+#### desc
+
 A boolean flag indicating whether the sorting should be in descending order.
+
 ### Returns
 
-List[Document]  
+list[Document]  
 
 A document object containing the following attributes:
 
-#### id: `str`
+#### id
 
 Id of the retrieved document. Defaults to `""`.
 
-#### thumbnail: `str`
+#### thumbnail
 
 Thumbnail image of the retrieved document. Defaults to `""`.
 
-#### knowledgebase_id: `str`
+#### knowledgebase_id
 
 Knowledge base ID related to the document. Defaults to `""`.
 
-#### parser_method: `str`
+#### parser_method
 
 Method used to parse the document. Defaults to `""`.
 
@@ -377,11 +392,11 @@ Method used to parse the document. Defaults to `""`.
 
 Configuration object for the parser. Defaults to `None`.
 
-#### source_type: `str`
+#### source_type
 
 Source type of the document. Defaults to `""`.
 
-#### type: `str`
+#### type
 
 Type or category of the document. Defaults to `""`.
 
@@ -389,9 +404,8 @@ Type or category of the document. Defaults to `""`.
 
 Creator of the document. Defaults to `""`.
 
-#### name: `str`
-string
-''
+#### name
+
 Name or title of the document. Defaults to `""`.
 
 #### size: `int`
@@ -427,14 +441,14 @@ Duration of the processing in seconds or minutes. Defaults to `0.0`.
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-ds = rag.create_dataset(name="kb_1")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
+dataset = rag.create_dataset(name="kb_1")
 
 filename1 = "~/ragflow.txt"
 blob=open(filename1 , "rb").read()
 list_files=[{"name":filename1,"blob":blob}]
-ds.upload_documents(list_files)
-for d in ds.list_documents(keywords="rag", offset=0, limit=12):
+dataset.upload_documents(list_files)
+for d in dataset.list_documents(keywords="rag", offset=0, limit=12):
     print(d)
 ```
 
@@ -443,18 +457,20 @@ for d in ds.list_documents(keywords="rag", offset=0, limit=12):
 ## Delete documents
 
 ```python
-DataSet.delete_documents(ids: List[str] = None)
+DataSet.delete_documents(ids: list[str] = None)
 ```
+
 ### Returns
 
-no return
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 ds = rag.list_datasets(name="kb_1")
 ds = ds[0]
 ds.delete_documents(ids=["id_1","id_2"])
@@ -465,26 +481,28 @@ ds.delete_documents(ids=["id_1","id_2"])
 ## Parse and stop parsing document
 
 ```python
-DataSet.async_parse_documents(document_ids:List[str]) -> None
-DataSet.async_cancel_parse_documents(document_ids:List[str])-> None
+DataSet.async_parse_documents(document_ids:list[str]) -> None
+DataSet.async_cancel_parse_documents(document_ids:list[str])-> None
 ```
 
 ### Parameters
 
-#### document_ids:`List[str]`
+#### document_ids: `list[str]`
+
 The ids of the documents to be parsed
 ????????????????????????????????????????????????????
 
 ### Returns
-no return
-????????????????????????????????????????????????????
+
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 #documents parse and cancel
 rag = RAGFlow(API_KEY, HOST_ADDRESS)
-ds = rag.create_dataset(name="God5")
+ds = rag.create_dataset(name="dataset_name")
 documents = [
     {'name': 'test1.txt', 'blob': open('./test_data/test1.txt',"rb").read()},
     {'name': 'test2.txt', 'blob': open('./test_data/test2.txt',"rb").read()},
@@ -501,10 +519,14 @@ ds.async_cancel_parse_documents(ids)
 print("Async bulk parsing cancelled")
 ```
 
+---
+
 ## List chunks
+
 ```python
-Document.list_chunks(keywords: str = None, offset: int = 0, limit: int = -1, id : str = None) -> List[Chunk]
+Document.list_chunks(keywords: str = None, offset: int = 0, limit: int = -1, id : str = None) -> list[Chunk]
 ```
+
 ### Parameters
 
 - `keywords`: `str`  
@@ -522,20 +544,22 @@ Document.list_chunks(keywords: str = None, offset: int = 0, limit: int = -1, id 
 - `id`: `str`  
   The ID of the chunk to be retrieved  
   default: `None`
+
 ### Returns
-List[chunk]
+list[chunk]
 
 ### Examples
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 ds = rag.list_datasets("123")
 ds = ds[0]
 ds.async_parse_documents(["wdfxb5t547d"])
 for c in doc.list_chunks(keywords="rag", offset=0, limit=12):
     print(c)
 ```
+
 ## Add chunk
 
 ```python
@@ -545,8 +569,11 @@ Document.add_chunk(content:str) -> Chunk
 ### Parameters
 
 #### content: `str`, *Required*
+
 Contains the main text or information of the chunk.
-#### important_keywords :`List[str]`
+
+#### important_keywords :`list[str]`
+
 list the key terms or phrases that are significant or central to the chunk's content.
 
 ### Returns
@@ -558,7 +585,7 @@ chunk
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 ds = rag.list_datasets(id="123")
 ds = ds[0]
 doc = ds.list_documents(id="wdfxb5t547d")
@@ -571,22 +598,25 @@ chunk = doc.add_chunk(content="xxxxxxx")
 ## Delete chunk
 
 ```python
-Document.delete_chunks(chunk_ids: List[str])
+Document.delete_chunks(chunk_ids: list[str])
 ```
 ### Parameters
-#### chunk_ids:`List[str]`
+
+#### chunk_ids:`list[str]`
+
 The list of chunk_id
 
 ### Returns
 
-no return
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 ds = rag.list_datasets(id="123")
 ds = ds[0]
 doc = ds.list_documents(id="wdfxb5t547d")
@@ -606,7 +636,7 @@ Chunk.update(update_message: dict)
 - `content`: `str`  
   Contains the main text or information of the chunk
 
-- `important_keywords`: `List[str]`  
+- `important_keywords`: `list[str]`  
   List the key terms or phrases that are significant or central to the chunk's content
 
 - `available`: `int`  
@@ -614,14 +644,15 @@ Chunk.update(update_message: dict)
 
 ### Returns
 
-no return
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 ds = rag.list_datasets(id="123")
 ds = ds[0]
 doc = ds.list_documents(id="wdfxb5t547d")
@@ -635,7 +666,7 @@ chunk.update({"content":"sdfx...})
 ## Retrieval
 
 ```python
-RAGFlow.retrieve(question:str="", datasets:List[str]=None, document=List[str]=None, offset:int=1, limit:int=30, similarity_threshold:float=0.2, vector_similarity_weight:float=0.3, top_k:int=1024,rerank_id:str=None,keyword:bool=False,higlight:bool=False) -> List[Chunk]
+RAGFlow.retrieve(question:str="", datasets:list[str]=None, document=list[str]=None, offset:int=1, limit:int=30, similarity_threshold:float=0.2, vector_similarity_weight:float=0.3, top_k:int=1024,rerank_id:str=None,keyword:bool=False,higlight:bool=False) -> list[Chunk]
 ```
 
 ### Parameters
@@ -644,11 +675,11 @@ RAGFlow.retrieve(question:str="", datasets:List[str]=None, document=List[str]=No
 
 The user query or query keywords. Defaults to `""`.
 
-#### datasets: `List[Dataset]`, *Required*
+#### datasets: `list[Dataset]`, *Required*
 
 The scope of datasets.
 
-#### document: `List[Document]`
+#### document: `list[Document]`
 
 The scope of document. `None` means no limitation. Defaults to `None`.
 
@@ -683,14 +714,14 @@ Indicating whether keyword-based matching is enabled (True) or disabled (False).
 Specifying whether to enable highlighting of matched terms in the results (True) or not (False).
 ### Returns
 
-List[Chunk]
+list[Chunk]
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 ds = rag.list_datasets(name="ragflow")
 ds = ds[0]
 name = 'ragflow_test.txt'
@@ -711,22 +742,22 @@ for c in rag.retrieve(question="What's ragflow?",
 ---
 
 :::tip API GROUPING
-Chat APIs
+Chat Assistant Management
 :::
 
-## Create chat
-
-Creates a chat assistant.
+## Create chat assistant
 
 ```python
 RAGFlow.create_chat(
     name: str = "assistant", 
     avatar: str = "path", 
-    knowledgebases: List[DataSet] = ["kb1"], 
+    knowledgebases: list[DataSet] = [], 
     llm: Chat.LLM = None, 
     prompt: Chat.Prompt = None
 ) -> Chat
 ```
+
+Creates a chat assistant.
 
 ### Returns
 
@@ -752,7 +783,7 @@ The llm of the created chat. Defaults to `None`. When the value is `None`, a dic
 - **model_name**, `str`  
   The chat model name. If it is `None`, the user's default chat model will be returned.  
 - **temperature**, `float`  
-  This parameter controls the randomness of predictions by the model. A lower temperature makes the model more confident in its responses, while a higher temperature makes it more creative and diverse. Defaults to `0.1`.  
+  Controls the randomness of the model's predictions. A lower temperature increases the model's conficence in its responses; a higher temperature increases creativity and diversity. Defaults to `0.1`.  
 - **top_p**, `float`  
   Also known as “nucleus sampling”, this parameter sets a threshold to select a smaller set of words to sample from. It focuses on the most likely words, cutting off the less probable ones. Defaults to `0.3`  
 - **presence_penalty**, `float`  
@@ -764,14 +795,20 @@ The llm of the created chat. Defaults to `None`. When the value is `None`, a dic
 
 #### Prompt: `str`
 
-Instructions for LLM's responses, including character design, answer length, and language. Defaults to:
+Instructions for the LLM to follow.
 
-```
-You are an intelligent assistant. Please summarize the content of the knowledge base to answer the question. Please list the data in the knowledge base and answer in detail. When all knowledge base content is irrelevant to the question, your answer must include the sentence "The answer you are looking for is not found in the knowledge base!" Answers need to consider chat history.
+- `"similarity_threshold"`: `float` A similarity score to evaluate distance between two lines of text. It's weighted keywords similarity and vector cosine similarity. If the similarity between query and chunk is less than this threshold, the chunk will be filtered out. Defaults to `0.2`.
+- `"keywords_similarity_weight"`: `float` It's weighted keywords similarity and vector cosine similarity or rerank score (0~1). Defaults to `0.7`.
+- `"top_n"`: `int` Not all the chunks whose similarity score is above the 'similarity threshold' will be feed to LLMs. LLM can only see these 'Top N' chunks. Defaults to `8`.
+- `"variables"`: `list[dict[]]` If you use dialog APIs, the variables might help you chat with your clients with different strategies. The variables are used to fill in the 'System' part in prompt in order to give LLM a hint. The 'knowledge' is a very special variable which will be filled-in with the retrieved chunks. All the variables in 'System' should be curly bracketed. Defaults to `[{"key": "knowledge", "optional": True}]`
+- `"rerank_model"`: `str` If it is not specified, vector cosine similarity will be used; otherwise, reranking score will be used. Defaults to `""`.
+- `"empty_response"`: `str` If nothing is retrieved in the knowledge base for the user's question, this will be used as the response. To allow the LLM to improvise when nothing is retrieved, leave this blank. Defaults to `None`.
+- `"opener"`: `str` The opening greeting for the user. Defaults to `"Hi! I am your assistant, can I help you?"`.
+- `"show_quote`: `bool` Indicates whether the source of text should be displayed Defaults to `True`.
+- `"prompt"`: `str` The prompt content. Defaults to `You are an intelligent assistant. Please summarize the content of the knowledge base to answer the question. Please list the data in the knowledge base and answer in detail. When all knowledge base content is irrelevant to the question, your answer must include the sentence "The answer you are looking for is not found in the knowledge base!" Answers need to consider chat history.
       Here is the knowledge base:
       {knowledge}
-      The above is the knowledge base.
-```
+      The above is the knowledge base.`.
 
 ### Examples
 
@@ -787,11 +824,11 @@ assistant = rag.create_chat("Miss R", knowledgebases=knowledge_base)
 
 ## Update chat
 
-Updates the current chat assistant.
-
 ```python
 Chat.update(update_message: dict)
 ```
+
+Updates the current chat assistant.
 
 ### Parameters
 
@@ -800,14 +837,26 @@ Chat.update(update_message: dict)
 - `"name"`: `str` The name of the chat assistant to update.
 - `"avatar"`: `str` Base64 encoding of the avatar. Defaults to `""`
 - `"knowledgebases"`: `list[str]` Knowledge bases to update.
-- `"llm"`: `dict` llm settings
-  - `"model_name"`, `str` The chat model name.   
-  - `"temperature"`, `float` This parameter controls the randomness of predictions by the model.  
+- `"llm"`: `dict` The LLM settings:
+  - `"model_name"`, `str` The chat model name.
+  - `"temperature"`, `float` Controls the randomness of the model's predictions.  
   - `"top_p"`, `float` Also known as “nucleus sampling”, this parameter sets a threshold to select a smaller set of words to sample from.  
-  - `"presence_penalty"`, `float` This discourages the model from repeating the same information by penalizing words that have already appeared in the conversation.
-  - `"frequency penalty"`, `float` Similar to the presence penalty, this reduces the model’s tendency to repeat the same words frequently.
+  - `"presence_penalty"`, `float` This discourages the model from repeating the same information by penalizing words that have appeared in the conversation.
+  - `"frequency penalty"`, `float` Similar to presence penalty, this reduces the model’s tendency to repeat the same words.
   - `"max_token"`, `int` This sets the maximum length of the model’s output, measured in the number of tokens (words or pieces of words).
-- `"prompt"` : Instructions for LLM's responses, including character design, answer length, and language.
+- `"prompt"` : Instructions for the LLM to follow.
+  - `"similarity_threshold"`: `float` A score to evaluate distance between two lines of text. It's weighted keywords similarity and vector cosine similarity. If the similarity between query and chunk is less than this threshold, the chunk will be filtered out. Defaults to `0.2`.
+  - `"keywords_similarity_weight"`: `float` It's weighted keywords similarity and vector cosine similarity or rerank score (0~1). Defaults to `0.7`.
+  - `"top_n"`: `int` Not all the chunks whose similarity score is above the 'similarity threshold' will be feed to LLMs. LLM can only see these 'Top N' chunks. Defaults to `8`.
+  - `"variables"`: `list[dict[]]` If you use dialog APIs, the variables might help you chat with your clients with different strategies. The variables are used to fill in the 'System' part in prompt in order to give LLM a hint. The 'knowledge' is a very special variable which will be filled-in with the retrieved chunks. All the variables in 'System' should be curly bracketed. Defaults to `[{"key": "knowledge", "optional": True}]`
+  - `"rerank_model"`: `str` If it is not specified, vector cosine similarity will be used; otherwise, reranking score will be used. Defaults to `""`.
+  - `"empty_response"`: `str` If nothing is retrieved in the knowledge base for the user's question, this will be used as the response. To allow the LLM to improvise when nothing is retrieved, leave this blank. Defaults to `None`.
+  - `"opener"`: `str` The opening greeting for the user. Defaults to `"Hi! I am your assistant, can I help you?"`.
+  - `"show_quote`: `bool` Indicates whether the source of text should be displayed Defaults to `True`.
+  - `"prompt"`: `str` The prompt content. Defaults to `You are an intelligent assistant. Please summarize the content of the knowledge base to answer the question. Please list the data in the knowledge base and answer in detail. When all knowledge base content is irrelevant to the question, your answer must include the sentence "The answer you are looking for is not found in the knowledge base!" Answers need to consider chat history.
+      Here is the knowledge base:
+      {knowledge}
+      The above is the knowledge base.`.
 
 ### Returns
 
@@ -822,8 +871,7 @@ from ragflow import RAGFlow
 rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
 knowledge_base = rag.list_datasets(name="kb_1")
 assistant = rag.create_chat("Miss R", knowledgebases=knowledge_base)
-assistant.update({"llm": {"temperature":0.8}})
-
+assistant.update({"name": "Stefan", "llm": {"temperature": 0.8}, "prompt": {"top_n": 8}})
 ```
 
 ---
@@ -833,14 +881,14 @@ assistant.update({"llm": {"temperature":0.8}})
 Deletes specified chat assistants.
 
 ```python
-RAGFlow.delete_chats(ids: List[str] = None)
+RAGFlow.delete_chats(ids: list[str] = None)
 ```
 
 ### Parameters
 
 #### ids
 
-IDs of the chat assistants to delete.
+IDs of the chat assistants to delete. If not specified, all chat assistants will be deleted.
 
 ### Returns
 
@@ -868,14 +916,14 @@ RAGFlow.list_chats(
     desc: bool = True,
     id: str = None,
     name: str = None
-) -> List[Chat]
+) -> list[Chat]
 ```
 
 ### Parameters
 
 #### page
 
-The current page number to retrieve from the paginated results. Defaults to `1`.
+Specifies the page on which the records will be displayed. Defaults to `1`.
 
 #### page_size
 
@@ -891,15 +939,15 @@ Indicates whether to sort the results in descending order. Defaults to `True`.
 
 #### id: `string`  
 
-The ID of the chat to be retrieved. Defaults to `None`.
+The ID of the chat to retrieve. Defaults to `None`.
 
 #### name: `string`  
 
-The name of the chat to be retrieved. Defaults to `None`.
+The name of the chat to retrieve. Defaults to `None`.
 
 ### Returns
 
-- Success: A list of `Chat` objects representing the retrieved knowledge bases.
+- Success: A list of `Chat` objects.
 - Failure: `Exception`.
 
 ### Examples
@@ -924,69 +972,63 @@ Chat-session APIs
 Chat.create_session(name: str = "New session") -> Session
 ```
 
+Creates a chat session.
+
+### Parameters
+
+#### name
+
+The name of the chat session to create.
+
 ### Returns
 
-A `session` object.
-
-#### id: `str`
-
-The id of the created session is used to identify different sessions.
-- id can not be provided in creating
-
-#### name: `str`
-
-The name of the created session. Defaults to `"New session"`.
-
-#### messages: `List[Message]`
-
-The messages of the created session.
-- messages cannot be provided.
-
-Defaults:
-
-??????????????????????????????????????????????????????????????????????????????????????????????
-
-```
-[{"role": "assistant", "content": "Hi! I am your assistant，can I help you?"}]
-```
-
-#### chat_id: `str`
-
-The id of associated chat
-- `chat_id` can't be changed
+- Success: A `Session` object containing the following attributes:
+  - `id`: `str` The auto-generated unique identifier of the created session.
+  - `name`: `str` The name of the created session.
+  - `message`: `list[Message]` The messages of the created session assistant. Default: `[{"role": "assistant", "content": "Hi! I am your assistant，can I help you?"}]`
+  - `chat_id`: `str` The ID of the associated chat assistant.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-assi = rag.list_chats(name="Miss R")
-assi = assi[0]
-sess = assi.create_session()
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
+assistant = rag.list_chats(name="Miss R")
+assistant = assistant[0]
+session = assistant.create_session()
 ```
-
 
 ## Update session
 
 ```python
-Session.update(update_message:dict)
+Session.update(update_message: dict)
 ```
+
+Updates the current session.
+
+### Parameters
+
+#### update_message: `dict[str, Any]`, *Required*
+
+- `"name"`: `str` The name of the session to update.
 
 ### Returns
 
-no return
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-assi = rag.list_chats(name="Miss R")
-assi = assi[0]
-sess = assi.create_session("new_session")
-sess.update({"name": "Updated session"...})
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
+assistant = rag.list_chats(name="Miss R")
+assistant = assistant[0]
+session = assistant.create_session("session_name")
+session.update({"name": "updated_name"})
 ```
 
 ---
@@ -997,76 +1039,83 @@ sess.update({"name": "Updated session"...})
 Session.ask(question: str, stream: bool = False) -> Optional[Message, iter[Message]]
 ```
 
+Asks a question to start a conversation.
+
 ### Parameters
 
-#### question: `str`, *Required*
+#### question *Required*
 
-The question to start an AI chat. Defaults to `None`. ???????????????????
+The question to start an AI chat. Defaults to `None`.
 
-#### stream: `bool`
+#### stream
 
-The approach of streaming text generation. When stream is True, it outputs results in a streaming fashion; otherwise, it outputs the complete result after the model has finished generating.
+Indicates whether to output responses in a streaming way:
 
+- `True`: Enable streaming.
+- `False`: (Default) Disable streaming.
 
 ### Returns
 
-[Message, iter[Message]]
+- A `Message` object containing the response to the question if `stream` is set to `False`
+- An iterator containing multiple `message` objects (`iter[Message]`) if `stream` is set to `True`
+
+The following shows the attributes of a `Message` object:
 
 #### id: `str`
 
-The id of the message. `id` is automatically generated. Defaults to `None`. ???????????????????
+The auto-generated message ID.
 
 #### content: `str`
 
 The content of the message. Defaults to `"Hi! I am your assistant, can I help you?"`.
 
-#### reference: `List[Chunk]`
+#### reference: `list[Chunk]`
 
-The auto-generated reference of the message. Each `chunk` object includes the following attributes:
+A list of `Chunk` objects representing references to the message, each containing the following attributes:
 
 - **id**: `str`  
-  The id of the chunk. ?????????????????  
+  The chunk ID.
 - **content**: `str`  
-  The content of the chunk. Defaults to `None`. ?????????????????????  
-- **document_id**: `str`  
-  The ID of the document being referenced. Defaults to `""`.  
-- **document_name**: `str`  
-  The name of the referenced document being referenced. Defaults to `""`.  
-- **knowledgebase_id**: `str`  
-  The id of the knowledge base to which the relevant document belongs. Defaults to `""`.  
+  The content of the chunk.
 - **image_id**: `str`  
-  The id of the image related to the chunk. Defaults to `""`.  
+  The ID of the snapshot of the chunk.
+- **document_id**: `str`  
+  The ID of the referenced document.
+- **document_name**: `str`  
+  The name of the referenced document.
+- **position**: `list[str]`  
+  The location information of the chunk within the referenced document.
+- **knowledgebase_id**: `str`  
+  The ID of the knowledge base to which the referenced document belongs.
 - **similarity**: `float`
-  A general similarity score, usually a composite score derived from various similarity measures . This score represents the degree of similarity between two objects. The value ranges between 0 and 1, where a value closer to 1 indicates higher similarity. Defaults to `None`. ????????????????????????????????????   
+  A composite similarity score of the chunk ranging from `0` to `1`, with a higher value indicating greater similarity.
 - **vector_similarity**: `float`  
-  A similarity score based on vector representations. This score is obtained by converting texts, words, or objects into vectors and then calculating the cosine similarity or other distance measures between these vectors to determine the similarity in vector space. A higher value indicates greater similarity in the vector space. Defaults to `None`. ?????????????????????????????????
+  A vector similarity score of the chunk ranging from `0` to `1`, with a higher value indicating greater similarity between vector embeddings.
 - **term_similarity**: `float`  
-  The similarity score based on terms or keywords. This score is calculated by comparing the similarity of key terms between texts or datasets, typically measuring how similar two words or phrases are in meaning or context. A higher value indicates a stronger similarity between terms. Defaults to `None`. ???????????????????  
-- **position**: `List[string]`  
-  Indicates the position or index of keywords or specific terms within the text. An array is typically used to mark the location of keywords or specific elements, facilitating precise operations or analysis of the text. Defaults to `None`. ??????????????
+  A keyword similarity score of the chunk ranging from `0` to `1`, with a higher value indicating greater similarity between keywords.
+
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-assi = rag.list_chats(name="Miss R")
-assi = assi[0]
-sess = assi.create_session()    
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
+assistant = rag.list_chats(name="Miss R")
+assistant = assistant[0]
+session = assistant.create_session()    
 
 print("\n==================== Miss R =====================\n")
-print(assi.get_prologue())
+print(assistant.get_prologue())
 
 while True:
     question = input("\n==================== User =====================\n> ")
     print("\n==================== Miss R =====================\n")
     
     cont = ""
-    for ans in sess.ask(question, stream=True):
-        print(ans.content[len(cont):], end='', flush=True)
-        cont = ans.content
-
+    for ans in session.ask(question, stream=True):
+        print(answer.content[len(cont):], end='', flush=True)
+        cont = answer.content
 ```
 
 ---
@@ -1081,81 +1130,82 @@ Chat.list_sessions(
     desc: bool = True,
     id: str = None,
     name: str = None
-) -> List[Session]
+) -> list[Session]
 ```
+
+Lists sessions associated with the current chat assistant.
+
+### Parameters
+
+#### page
+
+Specifies the page on which records will be displayed. Defaults to `1`.
+
+#### page_size
+
+The number of records on each page. Defaults to `1024`.
+
+#### orderby
+
+The field by which the records should be sorted. This specifies the attribute or column used to sort the results. Defaults to `"create_time"`.
+
+#### desc
+
+Whether the sorting should be in descending order. Defaults to `True`.
+
+#### id
+
+The ID of the chat session to retrieve. Defaults to `None`.
+
+#### name
+
+The name of the chat to retrieve. Defaults to `None`.
 
 ### Returns
 
-List[Session]
-description: the List contains information about multiple assistant object, with each dictionary containing information about one assistant.
+- Success: A list of `Session` objects associated with the current chat assistant.
+- Failure: `Exception`.
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-assi = rag.list_chats(name="Miss R")
-assi = assi[0]
-for sess in assi.list_sessions():
-    print(sess)
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
+assistant = rag.list_chats(name="Miss R")
+assistant = assistant[0]
+for session in assistant.list_sessions():
+    print(session)
 ```
 
-### Parameters
-
-#### page: `int`  
-
-The current page number to retrieve from the paginated data. This parameter determines which set of records will be fetched.  
-- `1`
-
-#### page_size: `int`  
-
-The number of records to retrieve per page. This controls how many records will be included in each page.  
-- `1024`
-
-#### orderby: `string`  
-
-The field by which the records should be sorted. This specifies the attribute or column used to order the results.  
-- `"create_time"`
-
-#### desc: `bool`  
-
-A boolean flag indicating whether the sorting should be in descending order.  
-- `True`
-
-#### id: `string`  
-
-The ID of the chat to be retrieved.  
-- `None`
-
-#### name: `string`  
-
-The name of the chat to be retrieved.  
-- `None`
 ---
 
-## Delete session
+## Delete sessions
 
 ```python
-Chat.delete_sessions(ids:List[str] = None)
+Chat.delete_sessions(ids:list[str] = None)
 ```
+
+Deletes specified sessions or all sessions associated with the current chat assistant.
+
+### Parameters
+
+#### ids
+
+IDs of the sessions to delete. If not specified, all sessions associated with the current chat assistant will be deleted.
 
 ### Returns
 
-no return
+- Success: No value is returned.
+- Failure: `Exception`
 
 ### Examples
 
 ```python
 from ragflow import RAGFlow
 
-rag = RAGFlow(api_key="xxxxxx", base_url="http://xxx.xx.xx.xxx:9380")
-assi = rag.list_chats(name="Miss R")
-assi = assi[0]
-assi.delete_sessions(ids=["id_1","id_2"])
+rag = RAGFlow(api_key="<YOUR_API_KEY>", base_url="http://<YOUR_BASE_URL>:9380")
+assistant = rag.list_chats(name="Miss R")
+assistant = assistant[0]
+assistant.delete_sessions(ids=["id_1","id_2"])
 ```
-### Parameters
-#### ids: `List[string]`
-IDs of the sessions to be deleted.
-- `None`
-
