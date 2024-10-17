@@ -41,3 +41,7 @@ sdk/python/ragflow_sdk.egg-info/
 /huggingface.co
 /nltk_data
 *.deb
+
+# Exclude docker config file
+docker/docker-compose.yml
+docker/.env
