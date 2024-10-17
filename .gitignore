@@ -43,5 +43,4 @@ sdk/python/ragflow_sdk.egg-info/
 *.deb
 
 # Exclude docker config file
-docker/docker-compose.yml
-docker/.env
+docker/
