@@ -341,6 +341,7 @@ class Dealer:
             chunk = sres.field[id]
             dnm = chunk["docnm_kwd"]
             did = chunk["doc_id"]
+            kid = chunk["kb_id"]
             position_int = chunk.get("position_int", [])
             d = {
                 "chunk_id": id,
@@ -364,10 +365,11 @@ class Dealer:
                     d["highlight"] = d["content_with_weight"]
             ranks["chunks"].append(d)
             if dnm not in ranks["doc_aggs"]:
-                ranks["doc_aggs"][dnm] = {"doc_id": did, "count": 0}
+                ranks["doc_aggs"][dnm] = {"doc_id": did, "kb_id": kid, "count": 0}
             ranks["doc_aggs"][dnm]["count"] += 1
         ranks["doc_aggs"] = [{"doc_name": k,
                               "doc_id": v["doc_id"],
+                              "kb_id": v["kb_id"],
                               "count": v["count"]} for k,
                              v in sorted(ranks["doc_aggs"].items(),
                                          key=lambda x:x[1]["count"] * -1)]
