@@ -42,9 +42,9 @@ RAGFlow offers multiple chunking template to facilitate chunking files of differ
 | **Template** | Description                                                           | File format                                          |
 |--------------|-----------------------------------------------------------------------|------------------------------------------------------|
 | General      | Files are consecutively chunked based on a preset chunk token number. | DOCX, EXCEL, PPT, PDF, TXT, JPEG, JPG, PNG, TIF, GIF |
-| Q&A          |                                                                       | EXCEL, CSV/TXT                                       |
+| Q&A          |                                                                       | XLSX, CSV/TXT                                        |
 | Manual       |                                                                       | PDF                                                  |
-| Table        |                                                                       | EXCEL, CSV/TXT                                       |
+| Table        |                                                                       | XLSX, CSV/TXT                                        |
 | Paper        |                                                                       | PDF                                                  |
 | Book         |                                                                       | DOCX, PDF, TXT                                       |
 | Laws         |                                                                       | DOCX, PDF, TXT                                       |
@@ -128,7 +128,7 @@ RAGFlow uses multiple recall of both full-text search and vector search in its c
 
 ## Search for knowledge base
 
-As of RAGFlow v0.16.0, the search feature is still in a rudimentary form, supporting only knowledge base search by name.
+As of RAGFlow v0.17.0, the search feature is still in a rudimentary form, supporting only knowledge base search by name.
 
 ![search knowledge base](https://github.com/infiniflow/ragflow/assets/93570324/836ae94c-2438-42be-879e-c7ad2a59693e)
 
