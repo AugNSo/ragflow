@@ -34,6 +34,7 @@ def valid_names(draw):
     return name.encode("utf-8").decode("utf-8")
 
 
+@pytest.mark.p1
 @pytest.mark.usefixtures("clear_datasets")
 class TestAuthorization:
     @pytest.mark.parametrize(
@@ -56,6 +57,7 @@ class TestAuthorization:
 
 @pytest.mark.usefixtures("clear_datasets")
 class TestDatasetCreation:
+    @pytest.mark.p1
     @given(name=valid_names())
     @example("a" * 128)
     @settings(max_examples=20)
@@ -64,6 +66,7 @@ class TestDatasetCreation:
         assert res["code"] == 0, res
         assert res["data"]["name"] == name, res
 
+    @pytest.mark.p1
     @pytest.mark.parametrize(
         "name, expected_message",
         [
@@ -79,6 +82,7 @@ class TestDatasetCreation:
         assert res["code"] == 101, res
         assert expected_message in res["message"], res
 
+    @pytest.mark.p2
     def test_duplicated_name(self, get_http_api_auth):
         name = "duplicated_name"
         payload = {"name": name}
@@ -89,6 +93,7 @@ class TestDatasetCreation:
         assert res["code"] == 101, res
         assert res["message"] == f"Dataset name '{name}' already exists", res
 
+    @pytest.mark.p2
     def test_case_insensitive(self, get_http_api_auth):
         name = "CaseInsensitive"
         res = create_dataset(get_http_api_auth, {"name": name.upper()})
@@ -98,6 +103,28 @@ class TestDatasetCreation:
         assert res["code"] == 101, res
         assert res["message"] == f"Dataset name '{name.lower()}' already exists", res
 
+    @pytest.mark.p3
+    def test_bad_content_type(self, get_http_api_auth):
+        BAD_CONTENT_TYPE = "text/xml"
+        res = create_dataset(get_http_api_auth, {"name": "name"}, {"Content-Type": BAD_CONTENT_TYPE})
+        assert res["code"] == 101, res
+        assert res["message"] == f"Unsupported content type: Expected application/json, got {BAD_CONTENT_TYPE}", res
+
+    @pytest.mark.p3
+    @pytest.mark.parametrize(
+        "payload, expected_message",
+        [
+            ("a", "Malformed JSON syntax: Missing commas/brackets or invalid encoding"),
+            ('"a"', "Invalid request payload: expected objec"),
+        ],
+        ids=["malformed_json_syntax", "invalid_request_payload_type"],
+    )
+    def test_bad_payload(self, get_http_api_auth, payload, expected_message):
+        res = create_dataset(get_http_api_auth, data=payload)
+        assert res["code"] == 101, res
+        assert expected_message in res["message"], res
+
+    @pytest.mark.p2
     def test_avatar(self, get_http_api_auth, tmp_path):
         fn = create_image_file(tmp_path / "ragflow_test.png")
         payload = {
@@ -107,17 +134,20 @@ class TestDatasetCreation:
         res = create_dataset(get_http_api_auth, payload)
         assert res["code"] == 0, res
 
+    @pytest.mark.p3
     def test_avatar_none(self, get_http_api_auth, tmp_path):
         payload = {"name": "test_avatar_none", "avatar": None}
         res = create_dataset(get_http_api_auth, payload)
         assert res["code"] == 0, res
         assert res["data"]["avatar"] is None, res
 
+    @pytest.mark.p2
     def test_avatar_exceeds_limit_length(self, get_http_api_auth):
         res = create_dataset(get_http_api_auth, {"name": "exceeds_limit_length_avatar", "avatar": "a" * 65536})
         assert res["code"] == 101, res
         assert "String should have at most 65535 characters" in res["message"], res
 
+    @pytest.mark.p3
     @pytest.mark.parametrize(
         "name, avatar_prefix, expected_message",
         [
@@ -138,18 +168,21 @@ class TestDatasetCreation:
         assert res["code"] == 101, res
         assert expected_message in res["message"], res
 
+    @pytest.mark.p3
     def test_description_none(self, get_http_api_auth):
         payload = {"name": "test_description_none", "description": None}
         res = create_dataset(get_http_api_auth, payload)
         assert res["code"] == 0, res
         assert res["data"]["description"] is None, res
 
+    @pytest.mark.p2
     def test_description_exceeds_limit_length(self, get_http_api_auth):
         payload = {"name": "exceeds_limit_length_description", "description": "a" * 65536}
         res = create_dataset(get_http_api_auth, payload)
         assert res["code"] == 101, res
         assert "String should have at most 65535 characters" in res["message"], res
 
+    @pytest.mark.p1
     @pytest.mark.parametrize(
         "name, embedding_model",
         [
@@ -158,7 +191,7 @@ class TestDatasetCreation:
             ("embedding-3@ZHIPU-AI", "embedding-3@ZHIPU-AI"),
             ("embedding_model_default", None),
         ],
-        ids=["builtin_baai", "builtin_youdao", "tenant__zhipu", "default"],
+        ids=["builtin_baai", "builtin_youdao", "tenant_zhipu", "default"],
     )
     def test_valid_embedding_model(self, get_http_api_auth, name, embedding_model):
         if embedding_model is None:
@@ -173,35 +206,48 @@ class TestDatasetCreation:
         else:
             assert res["data"]["embedding_model"] == embedding_model, res
 
+    @pytest.mark.p2
     @pytest.mark.parametrize(
         "name, embedding_model",
         [
             ("unknown_llm_name", "unknown@ZHIPU-AI"),
             ("unknown_llm_factory", "embedding-3@unknown"),
-            ("tenant_no_auth", "deepseek-chat@DeepSeek"),
+            ("tenant_no_auth_default_tenant_llm", "text-embedding-v3@Tongyi-Qianwen"),
+            ("tenant_no_auth", "text-embedding-3-small@OpenAI"),
         ],
-        ids=["unknown_llm_name", "unknown_llm_factory", "tenant_no_auth"],
+        ids=["unknown_llm_name", "unknown_llm_factory", "tenant_no_auth_default_tenant_llm", "tenant_no_auth"],
     )
     def test_invalid_embedding_model(self, get_http_api_auth, name, embedding_model):
         payload = {"name": name, "embedding_model": embedding_model}
         res = create_dataset(get_http_api_auth, payload)
         assert res["code"] == 101, res
-        assert res["message"] == f"The embedding_model '{embedding_model}' is not supported", res
+        if "tenant_no_auth" in name:
+            assert res["message"] == f"Unauthorized model: <{embedding_model}>", res
+        else:
+            assert res["message"] == f"Unsupported model: <{embedding_model}>", res
 
+    @pytest.mark.p2
     @pytest.mark.parametrize(
         "name, embedding_model",
         [
-            ("builtin_missing_at", "BAAI/bge-large-zh-v1.5"),
-            ("tenant_missing_at", "embedding-3ZHIPU-AI"),
+            ("missing_at", "BAAI/bge-large-zh-v1.5BAAI"),
+            ("missing_model_name", "@BAAI"),
+            ("missing_provider", "BAAI/bge-large-zh-v1.5@"),
+            ("whitespace_only_model_name", " @BAAI"),
+            ("whitespace_only_provider", "BAAI/bge-large-zh-v1.5@ "),
         ],
-        ids=["builtin_missing_at", "tenant_missing_at"],
+        ids=["missing_at", "empty_model_name", "empty_provider", "whitespace_only_model_name", "whitespace_only_provider"],
     )
-    def test_embedding_model_missing_at(self, get_http_api_auth, name, embedding_model):
+    def test_embedding_model_format(self, get_http_api_auth, name, embedding_model):
         payload = {"name": name, "embedding_model": embedding_model}
         res = create_dataset(get_http_api_auth, payload)
         assert res["code"] == 101, res
-        assert "Embedding model must be xxx@yyy" in res["message"], res
+        if name == "missing_at":
+            assert "Embedding model identifier must follow <model_name>@<provider> format" in res["message"], res
+        else:
+            assert "Both model_name and provider must be non-empty strings" in res["message"], res
 
+    @pytest.mark.p1
     @pytest.mark.parametrize(
         "name, permission",
         [
@@ -225,6 +271,7 @@ class TestDatasetCreation:
         else:
             assert res["data"]["permission"] == permission.lower(), res
 
+    @pytest.mark.p2
     @pytest.mark.parametrize(
         "name, permission",
         [
@@ -239,6 +286,7 @@ class TestDatasetCreation:
         assert res["code"] == 101
         assert "Input should be 'me' or 'team'" in res["message"]
 
+    @pytest.mark.p1
     @pytest.mark.parametrize(
         "name, chunk_method",
         [
@@ -269,6 +317,7 @@ class TestDatasetCreation:
         else:
             assert res["data"]["chunk_method"] == chunk_method, res
 
+    @pytest.mark.p2
     @pytest.mark.parametrize(
         "name, chunk_method",
         [
@@ -283,6 +332,7 @@ class TestDatasetCreation:
         assert res["code"] == 101, res
         assert "Input should be 'naive', 'book', 'email', 'laws', 'manual', 'one', 'paper', 'picture', 'presentation', 'qa', 'table' or 'tag'" in res["message"], res
 
+    @pytest.mark.p1
     @pytest.mark.parametrize(
         "name, parser_config",
         [
@@ -311,8 +361,7 @@ class TestDatasetCreation:
             ("filename_embd_weight_mid", {"filename_embd_weight": 0.5}),
             ("filename_embd_weight_max", {"filename_embd_weight": 1.0}),
             ("task_page_size_min", {"task_page_size": 1}),
-            ("task_page_size_mid", {"task_page_size": 5_000}),
-            ("task_page_size_max", {"task_page_size": 10_000}),
+            ("task_page_size_None", {"task_page_size": None}),
             ("pages", {"pages": [[1, 100]]}),
             ("pages_none", None),
             ("graphrag_true", {"graphrag": {"use_graphrag": True}}),
@@ -337,8 +386,6 @@ class TestDatasetCreation:
             ("raptor_max_cluster_mid", {"raptor": {"max_cluster": 512}}),
             ("raptor_max_cluster_max", {"raptor": {"max_cluster": 1024}}),
             ("raptor_random_seed_min", {"raptor": {"random_seed": 0}}),
-            ("raptor_random_seed_mid", {"raptor": {"random_seed": 5_000}}),
-            ("raptor_random_seed_max", {"raptor": {"random_seed": 10_000}}),
         ],
         ids=[
             "default_none",
@@ -366,8 +413,7 @@ class TestDatasetCreation:
             "filename_embd_weight_mid",
             "filename_embd_weight_max",
             "task_page_size_min",
-            "task_page_size_mid",
-            "task_page_size_max",
+            "task_page_size_None",
             "pages",
             "pages_none",
             "graphrag_true",
@@ -392,8 +438,6 @@ class TestDatasetCreation:
             "raptor_max_cluster_mid",
             "raptor_max_cluster_max",
             "raptor_random_seed_min",
-            "raptor_random_seed_mid",
-            "raptor_random_seed_max",
         ],
     )
     def test_valid_parser_config(self, get_http_api_auth, name, parser_config):
@@ -406,7 +450,7 @@ class TestDatasetCreation:
         if parser_config is None:
             assert res["data"]["parser_config"] == {
                 "chunk_token_num": 128,
-                "delimiter": r"\n!?;。；！？",
+                "delimiter": r"\n",
                 "html4excel": False,
                 "layout_recognize": "DeepDOC",
                 "raptor": {"use_raptor": False},
@@ -416,7 +460,7 @@ class TestDatasetCreation:
                 "auto_keywords": 0,
                 "auto_questions": 0,
                 "chunk_token_num": 128,
-                "delimiter": r"\n!?;。；！？",
+                "delimiter": r"\n",
                 "filename_embd_weight": None,
                 "graphrag": None,
                 "html4excel": False,
@@ -435,6 +479,7 @@ class TestDatasetCreation:
                 else:
                     assert res["data"]["parser_config"][k] == v
 
+    @pytest.mark.p2
     @pytest.mark.parametrize(
         "name, parser_config, expected_message",
         [
@@ -462,7 +507,6 @@ class TestDatasetCreation:
             ("filename_embd_weight_max_limit", {"filename_embd_weight": 1.1}, "Input should be less than or equal to 1"),
             ("filename_embd_weight_type_invalid", {"filename_embd_weight": "string"}, "Input should be a valid number, unable to parse string as a number"),
             ("task_page_size_min_limit", {"task_page_size": 0}, "Input should be greater than or equal to 1"),
-            ("task_page_size_max_limit", {"task_page_size": 10_001}, "Input should be less than or equal to 10000"),
             ("task_page_size_float_not_allowed", {"task_page_size": 3.14}, "Input should be a valid integer, got a number with a fractional part"),
             ("task_page_size_type_invalid", {"task_page_size": "string"}, "Input should be a valid integer, unable to parse string as an integer"),
             ("pages_not_list", {"pages": "1,2"}, "Input should be a valid list"),
@@ -490,10 +534,9 @@ class TestDatasetCreation:
             ("raptor_max_cluster_float_not_allowed", {"raptor": {"max_cluster": 3.14}}, "Input should be a valid integer, got a number with a fractional par"),
             ("raptor_max_cluster_type_invalid", {"raptor": {"max_cluster": "string"}}, "Input should be a valid integer, unable to parse string as an integer"),
             ("raptor_random_seed_min_limit", {"raptor": {"random_seed": -1}}, "Input should be greater than or equal to 0"),
-            ("raptor_random_seed_max_limit", {"raptor": {"random_seed": 10_001}}, "Input should be less than or equal to 10000"),
             ("raptor_random_seed_float_not_allowed", {"raptor": {"random_seed": 3.14}}, "Input should be a valid integer, got a number with a fractional part"),
             ("raptor_random_seed_type_invalid", {"raptor": {"random_seed": "string"}}, "Input should be a valid integer, unable to parse string as an integer"),
-            ("parser_config_type_invalid", {"delimiter": "a" * 65536}, "Parser config have at most 65535 characters"),
+            ("parser_config_type_invalid", {"delimiter": "a" * 65536}, "Parser config exceeds size limit (max 65,535 characters)"),
         ],
         ids=[
             "auto_keywords_min_limit",
@@ -520,7 +563,6 @@ class TestDatasetCreation:
             "filename_embd_weight_max_limit",
             "filename_embd_weight_type_invalid",
             "task_page_size_min_limit",
-            "task_page_size_max_limit",
             "task_page_size_float_not_allowed",
             "task_page_size_type_invalid",
             "pages_not_list",
@@ -548,7 +590,6 @@ class TestDatasetCreation:
             "raptor_max_cluster_float_not_allowed",
             "raptor_max_cluster_type_invalid",
             "raptor_random_seed_min_limit",
-            "raptor_random_seed_max_limit",
             "raptor_random_seed_float_not_allowed",
             "raptor_random_seed_type_invalid",
             "parser_config_type_invalid",
@@ -560,7 +601,7 @@ class TestDatasetCreation:
         assert res["code"] == 101, res
         assert expected_message in res["message"], res
 
-    @pytest.mark.slow
+    @pytest.mark.p3
     def test_dataset_10k(self, get_http_api_auth):
         for i in range(10_000):
             payload = {"name": f"dataset_{i}"}
