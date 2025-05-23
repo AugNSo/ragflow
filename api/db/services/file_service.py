@@ -458,6 +458,16 @@ class FileService(CommonService):
 
         return err, files
 
+    @staticmethod
+    def download_from_oss(oss_link):
+        import requests
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36"}
+        response = requests.get(oss_link, headers = headers)
+        if response.status_code == 200:
+            return response.content
+        else:
+            raise RuntimeError(f"Failed to download file from OSS: {response.status_code}")
+
     @classmethod
     @DB.connection_context()
     def upload_oss_documents(self, kb, oss_links, file_names, user_id):
