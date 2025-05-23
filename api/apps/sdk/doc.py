@@ -137,9 +137,9 @@ def upload(dataset_id, tenant_id):
             return get_result(
                 message="No file selected!", code=settings.RetCode.ARGUMENT_ERROR
             )
-        if len(file_obj.filename.encode("utf-8")) >= 128:
+        if len(file_obj.filename.encode("utf-8")) >= 256:
             return get_result(
-                message="File name should be less than 128 bytes.", code=settings.RetCode.ARGUMENT_ERROR
+                message="File name should be less than 256 bytes.", code=settings.RetCode.ARGUMENT_ERROR
             )
     '''
     # total size
@@ -258,9 +258,9 @@ def update_doc(tenant_id, dataset_id, document_id):
         DocumentService.update_meta_fields(document_id, req["meta_fields"])
 
     if "name" in req and req["name"] != doc.name:
-        if len(req["name"].encode("utf-8")) >= 128:
+        if len(req["name"].encode("utf-8")) >= 256:
             return get_result(
-                message="The name should be less than 128 bytes.",
+                message="The name should be less than 256 bytes.",
                 code=settings.RetCode.ARGUMENT_ERROR,
             )
         if (
