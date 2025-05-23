@@ -120,20 +120,30 @@ class OpenAIEmbed(Base):
 
     def encode(self, texts: list):
         # OpenAI requires batch size <=16
-        batch_size = 16
+        batch_size = 4
         texts = [truncate(t, 8191) for t in texts]
         ress = []
         total_tokens = 0
+        if self.model_name != "jina-embeddings-v3":
+            extra_body = {}
+        else:
+            extra_body = {"task":"retrieval.passage"}
         for i in range(0, len(texts), batch_size):
             res = self.client.embeddings.create(input=texts[i:i + batch_size],
-                                                model=self.model_name)
+                                                model=self.model_name,
+                                                extra_body=extra_body)
             ress.extend([d.embedding for d in res.data])
             total_tokens += self.total_token_count(res)
         return np.array(ress), total_tokens
 
     def encode_queries(self, text):
+        if self.model_name != "jina-embeddings-v3":
+            extra_body = {}
+        else:
+            extra_body = {"task":"retrieval.query"}
         res = self.client.embeddings.create(input=[truncate(text, 8191)],
-                                            model=self.model_name)
+                                            model=self.model_name,
+                                            extra_body=extra_body)
         return np.array(res.data[0].embedding), self.total_token_count(res)
 
 
@@ -328,18 +338,27 @@ class XinferenceEmbed(Base):
         self.model_name = model_name
 
     def encode(self, texts: list):
-        batch_size = 16
+        batch_size = 4
         ress = []
         total_tokens = 0
+        if self.model_name != "jina-embeddings-v3":
+            extra_body = {}
+        else:
+            extra_body = {"task":"retrieval.passage"}
         for i in range(0, len(texts), batch_size):
-            res = self.client.embeddings.create(input=texts[i:i + batch_size], model=self.model_name)
+            res = self.client.embeddings.create(input=texts[i:i + batch_size], model=self.model_name, extra_body=extra_body)
             ress.extend([d.embedding for d in res.data])
             total_tokens += self.total_token_count(res)
         return np.array(ress), total_tokens
 
     def encode_queries(self, text):
+        if self.model_name != "jina-embeddings-v3":
+            extra_body = {}
+        else:
+            extra_body = {"task":"retrieval.query"}
         res = self.client.embeddings.create(input=[text],
-                                            model=self.model_name)
+                                            model=self.model_name,
+                                            extra_body=extra_body)
         return np.array(res.data[0].embedding), self.total_token_count(res)
 
 
