@@ -82,7 +82,7 @@ class FulltextQueryer:
         txt = re.sub(r'([\u4e00-\u9fa5]+)([A-Za-z])', r'\1 \2', txt)
         return txt
 
-    def question(self, txt, tbl="qa", min_match: float = 0.6):
+    def question(self, txt, tbl="qa", min_match=0.6):
         txt = FulltextQueryer.add_space_between_eng_zh(txt)
         txt = re.sub(
             r"[ :|\r\n\t,，。？?/`!！&^%%()\[\]{}<>]+",
