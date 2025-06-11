@@ -15,6 +15,8 @@
 #
 import datetime
 import json
+import logging
+import math
 
 from flask import request
 from flask_login import login_required, current_user
@@ -380,6 +382,43 @@ def knowledge_graph():
 
     return get_json_result(data=obj)
 
+def create_temp_tokenizer_with_custom_words(custom_words):
+    """
+    创建带有自定义词汇的临时分词器实例
+    """
+    from rag.nlp.rag_tokenizer import RagTokenizer
+    
+    # 创建新的分词器实例
+    temp_tokenizer = RagTokenizer()
+    
+    # 如果有自定义词汇，添加到临时实例中
+    if custom_words:
+        default_freq = 1000000
+        
+        if isinstance(custom_words, list):
+            word_dict = {word: default_freq for word in custom_words}
+        elif isinstance(custom_words, dict):
+            word_dict = {}
+            for word, freq in custom_words.items():
+                if freq is None or freq == "":
+                    word_dict[word] = default_freq
+                else:
+                    word_dict[word] = freq
+        else:
+            logging.warning("Invalid custom_words format")
+            return temp_tokenizer
+        
+        for word, freq in word_dict.items():
+            if word and len(word) > 0:
+                k = temp_tokenizer.key_(word)
+                F = int(math.log(float(freq) / temp_tokenizer.DENOMINATOR) + 0.5)
+                temp_tokenizer.trie_[k] = (F, 'n')
+                temp_tokenizer.trie_[temp_tokenizer.rkey_(word)] = 1
+                logging.info(f"Added word to temp tokenizer: {word}")
+        
+        logging.info(f"Created temporary tokenizer with {len(word_dict)} custom words")
+    
+    return temp_tokenizer
 
 @manager.route("/retrieval_es", methods=["POST"])
 @login_required
@@ -391,6 +430,66 @@ def retrieval_es():
     question = req["question"]
     kb_ids = req["kb_id"]
     use_embedding = req.get("use_embedding", True)
+    enable_tokenize = req.get("enable_tokenize", False)
+
+    # Initialize variable to track selected segment
+    selected_segment = None
+
+    # Handle tokenization if enabled
+    if enable_tokenize:
+        original_question = question
+        
+        # 获取自定义词典
+        custom_words = req.get("custom_words")
+        
+        # 创建临时分词器实例（如果有自定义词汇）
+        if custom_words:
+            temp_tokenizer = create_temp_tokenizer_with_custom_words(custom_words)
+            tokens = temp_tokenizer.tokenize(question).split()
+            logging.info("Using temporary tokenizer with custom words")
+        else:
+            # 使用全局分词器
+            tokens = rag_tokenizer.tokenize(question).split()
+            logging.info("Using global tokenizer without custom words")
+        
+        if tokens:
+            # 定义无意义词汇
+            meaningless_words = req.get("meaningless_words", [
+                "的", "了", "在", "有", "是", "和", "与", "呢", "啊", "吗", "么", "或", "方面", "时候", "地方", "东西",
+                "内容", "过程", "方式"
+            ])
+            
+            # 过滤无意义词汇
+            meaningful_tokens = [t for t in tokens if t not in meaningless_words and len(t) > 1]
+            
+            if meaningful_tokens:
+                # 找到最后一个有意义token在原始tokens中的最后出现位置
+                last_meaningful_token = meaningful_tokens[-1]
+                last_meaningful_index = None
+                
+                # 从后往前找最后一个有意义token的位置
+                for i in range(len(tokens) - 1, -1, -1):
+                    if tokens[i] == last_meaningful_token:
+                        last_meaningful_index = i
+                        break
+                
+                # 从最后一个有意义token开始到结尾的所有tokens（包含该token + 后面的无意义词汇）
+                if last_meaningful_index is not None:
+                    selected_segment = "".join(tokens[last_meaningful_index:])
+                else:
+                    selected_segment = last_meaningful_token
+                
+                # 用于搜索的问题仍然是最后一个有意义token
+                question = last_meaningful_token
+            else:
+                # 如果没有有意义的token，使用最后一个token
+                selected_segment = tokens[-1] if tokens else original_question
+                question = tokens[-1] if tokens else original_question
+            
+            logging.info(f"Tokenization - Original: '{original_question}', Tokens: {tokens}, Meaningful: {meaningful_tokens}, Selected segment: '{selected_segment}', Search question: '{question}'")
+        else:
+            logging.warning(f"No tokens found for question: '{original_question}'")
+            selected_segment = original_question
 
     if isinstance(kb_ids, str):
         kb_ids = [kb_ids]
@@ -495,8 +594,12 @@ def retrieval_es():
             # 构造返回结果
             ranks = {"total": search_result.total, "chunks": [], "doc_aggs": {}}
 
+            # Add selected segment if tokenize was enabled
+            if enable_tokenize and selected_segment is not None:
+                ranks["selected_segment"] = selected_segment
+
             if not question:
-                return ranks
+                return get_json_result(data=ranks)
 
             # 处理搜索结果
             for i, id in enumerate(search_result.ids):
@@ -561,6 +664,10 @@ def retrieval_es():
                 rerank_mdl=rerank_mdl,
                 highlight=req.get("highlight"),
             )
+
+            # Add selected segment if tokenize was enabled
+            if enable_tokenize and selected_segment is not None:
+                ranks["selected_segment"] = selected_segment
 
         # Remove vector data from response
         for c in ranks["chunks"]:
